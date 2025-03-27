@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:week_3_blabla_project/ui/providers/async_value.dart';
 import 'package:week_3_blabla_project/ui/providers/rides_preferences_provider.dart';
 
 import '../../../model/ride/ride_pref.dart';
@@ -19,7 +20,7 @@ const String blablaHomeImagePath = 'assets/images/blabla_home.png';
 /// - Or select a last entered ride preferences and launch a search on it
 ///
 class RidePrefScreen extends StatelessWidget {
-const RidePrefScreen({super.key});
+  const RidePrefScreen({super.key});
 
   onRidePrefSelected(RidePreference newPreference, BuildContext context) async {
     // 1 - Update the current preference
@@ -27,15 +28,14 @@ const RidePrefScreen({super.key});
     provider.setCurrentPreference(newPreference);
 
     // 2 - Navigate to the rides screen (with a buttom to top animation)
-    await Navigator.of(context).push(AnimationUtils.createBottomToTopRoute(RidesScreen()));
-
+    await Navigator.of(context)
+        .push(AnimationUtils.createBottomToTopRoute(RidesScreen()));
   }
 
   @override
   Widget build(BuildContext context) {
     final ridesPrefProvider = context.watch<RidesPreferencesProvider>();
     RidePreference? currentRidePreference = ridesPrefProvider.currentPreference;
-    List<RidePreference> pastPreferences = ridesPrefProvider.preferencesHistory;
 
     return Stack(
       children: [
@@ -65,23 +65,15 @@ const RidePrefScreen({super.key});
                   RidePrefForm(
                       initialPreference: currentRidePreference,
                       onSubmit: (newPreference) {
-  onRidePrefSelected(newPreference, context); 
-                    }),
+                        onRidePrefSelected(newPreference, context);
+                      }),
                   SizedBox(height: BlaSpacings.m),
 
                   // 2.2 Optionally display a list of past preferences
                   SizedBox(
-                    height: 200, // Set a fixed height
-                    child: ListView.builder(
-                      shrinkWrap: true, // Fix ListView height issue
-                      physics: AlwaysScrollableScrollPhysics(),
-                      itemCount: pastPreferences.length,
-                     itemBuilder: (ctx, index) => RidePrefHistoryTile(
-                     ridePref: pastPreferences[index],
-                     onPressed: () => onRidePrefSelected(pastPreferences[index], context),
-  ),
-                    ),
-                  ),
+                      height: 200, // Set a fixed height
+
+                      child: _buildPastRidePrefListView(ridesPrefProvider, context)),
                 ],
               ),
             ),
@@ -89,6 +81,42 @@ const RidePrefScreen({super.key});
         ),
       ],
     );
+  }
+
+  Widget _buildPastRidePrefListView(
+      RidesPreferencesProvider provider, BuildContext context) {
+    final ridePrefValue = provider.pastPreferences;
+
+    switch (ridePrefValue.state) {
+      case AsyncValueState.loading:
+        return const Center(
+        child: SizedBox(
+          width: 30,  // Controls the size of the spinner
+          height: 30,
+          child: CircularProgressIndicator(
+            strokeWidth: 3,  // Makes the line thinner
+            valueColor: AlwaysStoppedAnimation<Color>(
+              Colors.blue,  // Use your theme's primary color
+            ),
+          ),
+        ),
+      );
+
+      case AsyncValueState.error:
+        return Text('Error: ${ridePrefValue.error}');
+
+      case AsyncValueState.success:
+      final reversedList = ridePrefValue.data!.reversed.toList(); // Create reversed copy
+  return ListView.builder(
+    shrinkWrap: true,
+    physics: const AlwaysScrollableScrollPhysics(),
+    itemCount: reversedList.length,
+    itemBuilder: (ctx, index) => RidePrefHistoryTile(
+      ridePref: reversedList[index], // Use reversed list
+      onPressed: () => onRidePrefSelected(reversedList[index], context),
+    ),
+  );
+    }
   }
 }
 
