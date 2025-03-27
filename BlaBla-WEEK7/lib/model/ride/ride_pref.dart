@@ -16,6 +16,28 @@ class RidePreference {
       required this.arrival,
       required this.requestedSeats});
 
+  // operator ==
+
+  @override
+bool operator ==(Object other) {
+  return other is RidePreference &&
+      departure == other.departure &&
+      arrival == other.arrival &&
+      departureDate.isAtSameMomentAs(other.departureDate) &&
+      requestedSeats == other.requestedSeats;
+}
+
+  // hash code 
+  @override
+   int get hashCode {
+    return Object.hash(
+      departure.hashCode,
+      departureDate.millisecondsSinceEpoch, // Important for DateTime
+      arrival.hashCode,
+      requestedSeats,
+    );
+  }
+
   @override
   String toString() {
     return 'RidePref(departure: ${departure.name}, '
