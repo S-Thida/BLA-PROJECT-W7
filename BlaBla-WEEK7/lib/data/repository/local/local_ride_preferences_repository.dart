@@ -21,7 +21,6 @@ class LocalRidePrefsRepository implements RidePreferencesRepository {
   Future<List<RidePreference>> getPastPreferences() async {
     //Get the SharedPreferences instance
     final prefs = await SharedPreferences.getInstance();
-
     // Get the string list from the key
     final prefsList = prefs.getStringList(_preferencesKey) ?? [];
     return prefsList
